@@ -157,5 +157,12 @@ We use `sparse_categorical_crossentropy` as loss function and apply the `SGD` op
 |       accuracy       |![](./figures/vit_b16_shallow_acc.png)  |  ![](./figures/vit_b16_deep_acc.png) |  
 |       test accuracy       | 82.1%  |  74.7% |
 
+- **Performance**
+
+  The `vit_b16` fine-tuned with `shallow` method outperforms other models and almost doesn't overfit in our experiment. The `vit-b16` fine-tuned with `deep` method overfits a bit but still achieves high accuracy.
+
+- **Complexity**
+
+  The `vit_b16` has about 86M params and it is still a small model in vision transformers. Using visiual prompt tuning we only tuned `0.096%` using `shallow` method and `0.145%` using `deep` method.
 
 ## Task 4: More advanced loss function
