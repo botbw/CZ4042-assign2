@@ -42,8 +42,6 @@ We use `sparse_categorical_crossentropy` as loss function and apply the `SGD` op
   
   `DenseNet201` ≥ `ResNet50` > `VGG16`, the models with residual connection have a smoother training curve meanwhile `VGG16` training curve is shaper and earlystopped around `60` epochs. The instroduction of residual connetion solved the vanishing gradient problem, which is widly used in modern CNN network. What's more, `BatchNormalizasion` (used in `DenseNet` and `ResNet`) also helps to solve the problem.
 
-
-
 - **Complexity/Time for forward propogation & backward propogation**
 
   `DenseNet201` > `ResNet50` > `VGG16`, `VGG16` is the "simplest" model here since it has the least layers and parameters. `ResNet50` introduced more layers and residual connection. `DenseNet201` has much more layers and residual connection. 
@@ -65,17 +63,19 @@ In our experiment `k` classes are classes from `[0, k)` for simplicity, a discre
 ### Methodology
 - **Basic idea**
 
-  Given an `img`, we can pass it through `feature_extractor` and get its feature vector `v`, which is a `p`-dimension vector and `p` is determined by the model. 
+  Given an `img`, we can pass it through `feature_extractor` and get its feature vector `q`, which is a `p`-dimension vector and `p` is determined by the model. 
   
-  Given `k` (number of classes) such vector, we can calculate the angle between `v` and `k` vectors, which is measured using `cos` value. The value can be calculated easily by multiplying the unit vector (l2 normalization) of two vectors. The predicted class is the class with highest `cos` value. (IMGGGGG)
+  Given `k` (number of classes, 3 in the figure) such vector, each denotes as `μ`, we can calculate the angle between `q` and `μ` vectors, which is measured using `cos` value. The value can be calculated easily by multiplying the unit vector (l2 normalization) of two vectors. The predicted class is the class with highest `cos` value. 
+  
+  ![](figures/few-shot-learning.png)
 
-  Given a `k`-way-`n`-shot dataset, we can get the feature vector for each sample, the feature vector of class `i` can be represented by the mean of feature vectors in class `i`. And we can get an matrix `W` of `k*p`. The `cos` distance of `img` against all classes can be calculated by `W*p`.
+  Given a `k`-way-`n`-shot dataset, we can get the feature vector for each sample, the feature vector of class `i` can be represented by the mean of feature vectors in class `i`. And we can get an matrix `M` of `k*p`. The `cos` distance of `img` against all classes can be calculated by `M*p`.
 
   Using a `Softmax` layer, we can convert the `cos` distance into possibility and make the prediction.
 
 - **Fine-tuning** and **Support-based initialization**
  
-  In the basic idea the `W` matrix is untrainable. To achieve better performance we can replace the `W` matrix with a `Dense` layer, whose weight is initialized with `W` and bias is initialized with `0`s. After introduing the `Dense` layer we can fine-tune both classification layer and the `feature_extractor`.
+  In the basic idea the `M` matrix is untrainable. To achieve better performance we can replace the `M` matrix with a `Dense` layer, whose weight is initialized with `M` and bias is initialized with `0`s. After introduing the `Dense` layer we can fine-tune both classification layer and the `feature_extractor`.
 
 
 ### Model
@@ -166,3 +166,4 @@ We use `sparse_categorical_crossentropy` as loss function and apply the `SGD` op
   The `vit_b16` has about 86M params and it is still a small model in vision transformers. Using visiual prompt tuning we only tuned `0.096%` using `shallow` method and `0.145%` using `deep` method.
 
 ## Task 4: More advanced loss function
+In this section, we followed the tutorial 
