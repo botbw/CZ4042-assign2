@@ -15,13 +15,13 @@ If a model is trained on a large and general enough dataset, this model will dev
 - **Augmentation** We didn't perform any augmentation on `train` set.
   
 ### Models
-We use three pretrained models in our experiment. All three models are downloaded from [`tensorflow.keras.applications`](https://www.tensorflow.org/api_docs/python/tf/keras/applications) and removed the classification layer. The model serves as `backbone` and is appended a `GlobalAveragePooling2D` layer, a `Dense` layer of `102` neurons with `ReLU` activation, and finally a `Softmax` layer. Which in general is 
-> `backbone`->`GlobalAveragePooling2D`->`Dense(ReLU)`->`Softmax`
+We use three pretrained models in our experiment. All three models are downloaded from [`tensorflow.keras.applications`](https://www.tensorflow.org/api_docs/python/tf/keras/applications) and removed the classification layer. The model serves as `backbone` and is appended a `GlobalAveragePooling2D` layer, a `Dropout` layer of `0.25`, a `Dense` layer of `102` neurons with `ReLU` activation, and finally a `Softmax` layer. Which in general is 
+> `backbone`->`GlobalAveragePooling2D`->`Dropout(0.25)`->`Dense(ReLU)`->`Softmax`
 
 The other possible architecture is to replace the `GlobalAveragePooling2D` with a `Flatten` layer, however, it doesn't improve the performance in our experiments and increase the model complexity.
 
 ### Experiment & Training
-We use `sparse_categorical_crossentropy` as loss function and apply the `SGD` optimizer with learning rate equals `0.01`. We ran `100` epochs on each model with an `EarlyStop` and patience equals `10`. We didn't use any normalization (e.g. l1, l2) in this experiment.
+We use `sparse_categorical_crossentropy` as loss function and apply the `SGD` optimizer with learning rate equals `0.01`. We ran `100` epochs on each model with an `EarlyStop` and patience equals `10`. 
 
 ### Results and analysation
 
@@ -30,29 +30,34 @@ We use `sparse_categorical_crossentropy` as loss function and apply the `SGD` op
 | trainable params |           14,767,014          |      23,743,590                 |                 18,288,870                   
 |       train loss          |![](./figures/VGG16_loss.png) |  ![](./figures/ResNet50_loss.png)|  ![](./figures/DenseNet201_loss.png)
 |       train accuracy       |![](./figures/VGG16_acc.png)  |  ![](./figures/ResNet50_acc.png) |  ![](./figures/DenseNet201_acc.png)  
-|       test accuracy       | 69.7%  |  75.0% |  79.2%      
+|       test accuracy       | 76.2%  |  79.3% |  79.2%      
 
 - **Performance**
   
   `DenseNet201` > `ResNet50` > `VGG16`, the deeper models (although there might be less params) outperform the shallower models. Modern CNN networks tend to be deeper instead of wider and it is believed that deeper models are able (or have higher possibility) to fit more complex functions and get better performance.
 
-  All three models have overfitting probelms, the severity: `VGG16` > `DenseNet50` ≥ `ResNet50`, in this experiment we didn't perform any normalization method (except model itself) to avoid overfitting.
+  We also tested the architecture with/without `Dropout` layer and found that the `Dropout` layer can increase the performance from `4.3%` to `6.5%` in all three models.
 
 - **Trainability**
   
-  `DenseNet201` ≥ `ResNet50` > `VGG16`, the models with residual connection have a smoother training curve meanwhile `VGG16` training curve is shaper and earlystopped around `60` epochs. The instroduction of residual connetion solved the vanishing gradient problem, which is widly used in modern CNN network. What's more, `BatchNormalizasion` (used in `DenseNet` and `ResNet`) also helps to solve the problem.
+  `DenseNet201` ≈ `ResNet50` > `VGG16`, the models with residual connection have a smoother training curve and consistent loss drop meanwhile `VGG16` training curve is shaper and earlystopped around `50` epochs. The instroduction of residual connetion solved the vanishing gradient problem, which is widly used in modern CNN network. Besides, `BatchNormalizasion` (used in `DenseNet` and `ResNet`) also helps to solve the problem.
 
 - **Complexity/Time for forward propogation & backward propogation**
 
-  `DenseNet201` > `ResNet50` > `VGG16`, `VGG16` is the "simplest" model here since it has the least layers and parameters. `ResNet50` introduced more layers and residual connection. `DenseNet201` has much more layers and residual connection. 
+  `DenseNet201` >> `ResNet50` > `VGG16`, `VGG16` is the "simplest" model here since it has the least layers and parameters. `ResNet50` introduced more layers and residual connection. `DenseNet201` has much more layers and residual connection, and we found it the most time-consuming during the training.
   
   Although `DenseNet201` has less params than `ResNet50`, it has an `O(n^2)` residual connetion compared with `O(n)` of `ResNet50`, which greatly increases computational complexity.
+
+- **Overfitting severity**
+  
+  `VGG16` > `ResNet50` ≥ `DenseNet201`, in this experiment we didn't perform any normalization method (except model itself) to avoid overfitting. `Dropout` layer helps to reduce overfitting to some extent. We might explore more nomalization method (for example l1, l2) in future work .
   
 ## Task 2: Few-shot learning using part of the dataset
 
 In this section, we use `VGG-16` as a backbone and perform `5-way-1-shot`, `5-way-5-shot`, `102-way-1-shot`, `102-way-5-shot` learning on `Oxford Flowers 102` dataset and analyse the result.
 
 ### The intuition of few-shot learning
+
 Machine learning alrothims (neural networks, for example) are often hampered when they are not "fed" with enough data. Some data are difficult and expensive to collect or it is impossible to collect enough samples. Few-shot learning (FSL) is proposed to tackle this problem. Using prior knowledge, FSL can rapidly generalize to new tasks containing only a few samples with supervised information. (Wang, 2019).
 
 ### Data preparation
@@ -65,9 +70,9 @@ In our experiment `k` classes are classes from `[0, k)` for simplicity, a discre
 
   Given an `img`, we can pass it through `feature_extractor` and get its feature vector `q`, which is a `p`-dimension vector and `p` is determined by the model. 
   
-  Given `k` (number of classes, 3 in the figure) such vector, each denotes as `μ`, we can calculate the angle between `q` and `μ` vectors, which is measured using `cos` value. The value can be calculated easily by multiplying the unit vector (l2 normalization) of two vectors. The predicted class is the class with highest `cos` value. 
+  Given `k` (number of classes, 3 in the figure) such vector, each denotes as `μ`, we can calculate the angle between `q` and `μ` vectors, which is measured using `cos` value. The value can be calculated easily by multiplying the unit vector (l2 normalization) of two vectors. The predicted class is the class with highest `cos` value (see picture below). 
   
-  ![](figures/few-shot-learning.png)
+  ![Screenshot from videos of Wang Shusen](figures/few-shot-learning.png)
 
   Given a `k`-way-`n`-shot dataset, we can get the feature vector for each sample, the feature vector of class `i` can be represented by the mean of feature vectors in class `i`. And we can get an matrix `M` of `k*p`. The `cos` distance of `img` against all classes can be calculated by `M*p`.
 
@@ -79,7 +84,7 @@ In our experiment `k` classes are classes from `[0, k)` for simplicity, a discre
 
 
 ### Model
-Inspired by (Dhillon, 2019), we use a similar architecture: Given a pre-trained model `feature_extractor` (backbone in origial paper), apply a `ReLU` on logits, and then append a new fully-connected layer `Dense`. Which in general is
+Inspired by (Dhillon, 2019), we use a similar architecture: Given a pre-trained model `feature_extractor`, apply a `ReLU` on logits, and then append a new fully-connected layer `Dense`. Which in general is
 > `feature_extractor`->`ReLU & Flatten`->`Dense`->`Softmax`
 
 We chosse `VGG-16` as the `feature_extractor` since it has smaller size, good trainabiliy and acceptable performance. 
@@ -166,4 +171,14 @@ We use `sparse_categorical_crossentropy` as loss function and apply the `SGD` op
   The `vit_b16` has about 86M params and it is still a small model in vision transformers. Using visiual prompt tuning we only tuned `0.096%` using `shallow` method and `0.145%` using `deep` method.
 
 ## Task 4: More advanced loss function
-In this section, we followed the tutorial 
+
+In this section, we followed the tutorial [here](https://www.tensorflow.org/addons/tutorials/losses_triplet) and tried `triplet loss` on `VGG-16`. Lastly we apply a `UMAP` (McInnes, 2018) algorithm to visualize the results in cluster graph.
+
+### Model
+
+Again, we use `VGG16` as our backbone network, following `GlabalAveragePooling2D`, `Flatten`, `Dense(no activation)` of `256` and a `l2 Normalization`. The model simply replaced the convolutional layers in the tutorial: 
+
+> `VGG16`->`GlabalAveragePooling2D`->`Flatten`->`Dense(no activation)`->`l2 Normalization`
+
+### Performance
+
