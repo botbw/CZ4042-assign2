@@ -29,18 +29,18 @@ import scipy as sp
 import tensorflow as tf
 import tensorflow_datasets as tfds
 
-!pip install git+https://github.com/tensorflow/docs
+# !pip install git+https://github.com/tensorflow/docs
 import tensorflow_docs as tfdocs
 import tensorflow_docs.modeling
 import tensorflow_docs.plots
 
-!pip install tensorflow-addons
+# !pip install tensorflow-addons
 import tensorflow_addons as tfa
 
 """# Parameter definition"""
 
 # Only set to True when you want to retrain the models (might take long time)
-TRAIN = False
+TRAIN = True
 
 num_classes = 102
 img_sz = 224 # since most pre-trained models are using 224 on ImageNet and smaller images reduce calculation as well as RAM consumption
@@ -938,11 +938,6 @@ def show_accuracy(loss_name):
 triplet hard/semi hard loss
 """
 
-# select batch size >= num_classes
-# use larger batch size to find more valid triplet
-# if batch size too small, might get nan loss
-# tested with 30+ GB with batch_sz=256
-batch_sz=128
 
 train_vgg16('TripletHardLoss', tfa.losses.TripletHardLoss(distance_metric='L2'), 100)
 show_accuracy('TripletHardLoss')
