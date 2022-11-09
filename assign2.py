@@ -12,7 +12,7 @@ Original file is located at
 # from google.colab import drive
 # drive.mount('/content/drive')
 # # google drive path
-# os.chdir('/content/drive/MyDrive/Assign2')
+# os.chdir('/content/drive/MyDrive/CZ4042-assign2')
 
 import os
 import warnings
