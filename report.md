@@ -4,7 +4,7 @@ In this section, we choose three previously published models (`VGG-16`, `ResNet-
 
 The reason why we choose these three models is that they represent a series of modern CNN progression in aspects of architecture and depth: `ResNet-50` can be thought as a deeper `VGG-16` with residual connection and `DenseNet-201` can be thought as a deeper `ResNet-50` with full residual connections.
 
-### The intuition of fine-tuning
+### Intuition of fine-tuning
 
 If a model is trained on a large and general enough dataset, this model will develop a great ability to extract the features of an image, and will effectively serve as a generic model of the visual world. In this task, our dataset only contains about 8,000 samples in total, which is quite small compared with other larger datasets. Instead of training a model from scratch, we might reuse those learned feature maps to perform a task on our smaller dataset.
 
@@ -72,7 +72,7 @@ Notice that the experiment results are all single runs. To get concrete results 
 
 In this section, we use `VGG-16` as a backbone and perform `5-way-1-shot`, `5-way-5-shot`, `102-way-1-shot`, `102-way-5-shot` learning on `Oxford Flowers 102` dataset and analyze the result.
 
-### The intuition of few-shot learning
+### Intuition of few-shot learning
 
 Machine learning algorithms (neural networks, for example) are often hampered when they are not "fed" with enough data. Some data are difficult and expensive to collect or it is impossible to collect enough samples. Few-shot learning (FSL) is proposed to tackle this problem. Using prior knowledge, FSL can rapidly generalize to new tasks containing only a few samples with supervised information. (Wang, 2019).
 
@@ -119,7 +119,7 @@ We performed experiments of `5-way-1-shot`, `5-way-5-shot`, `102-way-1-shot`, `1
 
 ### Results and analyzation
 
-|       Metric        |             5-way-1-shot           |             5-way-5-shot           |            102-way-1-shot     | 102-way-5-shot        |
+|       Metric\experiment        |             5-way-1-shot           |             5-way-5-shot           |            102-way-1-shot     | 102-way-5-shot        |
 :--------------------:|:----------------------------:|:--------------------------------:|:------------------------------------:|:---------------------:|
 | train set size    |   5/1020 | 25/1020 | 102/1020 | 510/1020
 | test set size | 161/6149 | 161/6149 | 6149/6149 | 6149/6149
@@ -143,7 +143,7 @@ We performed experiments of `5-way-1-shot`, `5-way-5-shot`, `102-way-1-shot`, `1
 
 In this section, we try a recently published fine-tuning method `visual prompt tuning` on the state of the art architecture `vision transformer`.
 
-### The intuition of fine-tuning
+### Intuition of fine-tuning
 
 Visual prompt tuning is a new tuning method introduced by `Jia, M.` in 2012. She took inspiration from recent advances in efficiently tuning large language models (prompt tuning) and introduced only a small amount (less than 1% of model parameters) of trainable parameters in the input space while keeping the model backbone frozen, which greatly reduced the time and space to fine-tune a huge model.
 
@@ -161,7 +161,7 @@ Same as Task 1.
 
   The inputs of original `vit_b16` transformer layers can be represented as [`x`, `E`], where `x` is class embedding and `E` are image patch embeddings, `x` is `d*1` and `E` is `d*k`, where `d` is determined by model and `k` is the number of patches. We introduce a `d*p` trainable parameters `P`, concatenate it with [`x`, `E`] and form new inputs [`x`, `P`, `E`].
 
-- **shallow** and **deep** visual prompt tuning
+- **Shallow** and **Deep** visual prompt tuning
   
   For shallow prompt tuning, we only add prompts before the first transformer layer. Only `P` contains the trainable parameters we introduce.
 
@@ -182,7 +182,7 @@ We use `sparse_categorical_crossentropy` as loss function and apply the `SGD` op
 
 ### Results and analyzation
 
-|       Metric        |             vit_b16-shallow           |             vit_b16-deep           |
+|       Metric\model        |             vit_b16-shallow           |             vit_b16-deep           |
 :--------------------:|:----------------------------:|:--------------------------------:|
 | trainable/total params |  82,278/85,880,934   |  124,518/85,923,174   |
 |        loss          |![](./figures/vit_b16_shallow_loss.png) |  ![](./figures/vit_b16_deep_loss.png)|
@@ -281,7 +281,7 @@ def show_accuracy(loss_name):
 
 ### Results
 
-|       Metric\loss function        |             TripletHardLoss           |             TripletSemiHardLoss           |   
+|       Metric\loss        |             TripletHardLoss           |             TripletSemiHardLoss           |   
 :--------------------:|:----------------------------:|:--------------------------------:|
 |       train loss          |![](./figures/TripletHardLoss_loss.png) |  ![](./figures/TripletSemiHardLoss_loss.png)|
 |       test accuracy       | 83.7%  |  78.2% | 
