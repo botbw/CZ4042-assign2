@@ -19,7 +19,9 @@ If a model is trained on a large and general enough dataset, this model will dev
   
 ### Models
 
-We use three pre-trained models in our experiment. All three models are downloaded from [`tensorflow.keras.applications`](https://www.tensorflow.org/api_docs/python/tf/keras/applications) and removed the classification layer. The model serves as a `backbone` and is appended a `GlobalAveragePooling2D` layer, a `Dropout` layer of `0.25`, a `Dense` layer of `102` neurons with `ReLU` activation, and finally a `Softmax` layer. Which in general is 
+We use three pre-trained models in our experiment. All three models are downloaded from [`tensorflow.keras.applications`](https://www.tensorflow.org/api_docs/python/tf/keras/applications) and removed the classification layer. The model serves as a `backbone` and is appended a `GlobalAveragePooling2D` layer, a `Dropout` layer of `0.25`, a `Dense` layer of `102` neurons with `ReLU` activation, and finally a `Softmax` layer,
+
+which in general is:
 > `backbone`->`GlobalAveragePooling2D`->`Dropout(0.25)`->`Dense(ReLU)`->`Softmax`
 
 The other possible architecture is to replace the `GlobalAveragePooling2D` with a `Flatten` layer, however, it doesn't improve the performance in our experiments and increases the model complexity.
@@ -28,11 +30,9 @@ The other possible architecture is to replace the `GlobalAveragePooling2D` with 
 
 We use `sparse_categorical_crossentropy` as the loss function and apply the `SGD` optimizer with learning rate equal to `0.01`. We ran `100` epochs on each model with an `EarlyStop` and patience equal to `10`. 
 
-Notice that the experiment results are all single runs. To get concrete results we might need to run multiple times and calculate the statistics.
-
 ### Results and analyzation
 
-|       Metric\backbone        |             VGG16           |             ResNet50           |            DenseNet201
+|       metric\backbone        |             VGG16           |             ResNet50           |            DenseNet201
 :--------------------:|:----------------------------:|:--------------------------------:|:------------------------------------:
 | layers | 16 | 50 | 201|
 | trainable params |           14,767,014          |      23,743,590                 |                 18,288,870                   
@@ -72,6 +72,8 @@ Notice that the experiment results are all single runs. To get concrete results 
 
 In this section, we use `VGG-16` as a backbone and perform `5-way-1-shot`, `5-way-5-shot`, `102-way-1-shot`, `102-way-5-shot` learning on `Oxford Flowers 102` dataset and analyze the result.
 
+Notice that the experiment results are all single runs.
+
 ### Intuition of few-shot learning
 
 Machine learning algorithms (neural networks, for example) are often hampered when they are not "fed" with enough data. Some data are difficult and expensive to collect or it is impossible to collect enough samples. Few-shot learning (FSL) is proposed to tackle this problem. Using prior knowledge, FSL can rapidly generalize to new tasks containing only a few samples with supervised information. (Wang, 2019).
@@ -98,28 +100,27 @@ In our experiment `k` classes are classes from `[0, k)` for simplicity, a discre
 
 - **Fine-tuning** and **Support-based initialization**
  
-  In the basic idea, the `M` matrix is untrainable. To achieve a better performance, we can replace the `M` matrix with a `Dense` layer, whose weight is initialized with `M` and bias is initialized with `0`s. After introducing the `Dense` layer we can fine-tune both the classification layer and the `feature_extractor`.
-
-- **Possible improvement in future work**
-  
-  Run multiple times and calculate the statistics (for example, mean and std).
-
+  In the basic idea, the `M` matrix is untrainable.
+  To achieve a better performance, we can replace the `M` matrix with a `Dense` layer, whose weight is initialized with `M` and bias is initialized with `0`s. After introducing the `Dense` layer we can fine-tune both the classification layer and the `feature_extractor`.
 
 ### Model
 
-Inspired by (Dhillon, 2019), we use a similar architecture: Given a pre-trained model `feature_extractor`, apply a `ReLU` on logits, and then append `Dropout` layer of `0.25`, normalize the output and forward to a new fully-connected layer `Dense`, lastly embed the output into probability using `Softmax`. Which in general is
+Inspired by (Dhillon, 2019), we use a similar architecture: Given a pre-trained model `feature_extractor`, apply a `ReLU` on logits, and then append `Dropout` layer of `0.25`, normalize the output and forward to a new fully-connected layer `Dense`, lastly embed the output into probability using `Softmax`,
 
+which in general is
 > `feature_extractor`->`ReLU & Flatten`->`Dropout`->`Normalize`->`Dense`->`Softmax`
 
 We choose `VGG-16` as the `feature_extractor` since it has a smaller size, good trainability and acceptable performance. 
 
 ### Experiment & Training
 
-We performed experiments of `5-way-1-shot`, `5-way-5-shot`, `102-way-1-shot`, `102-way-5-shot` using `VGG-16`. For each experiment, We used `cross entropy` as loss function with `label_smoothing` equal to `0.1` and `Adam` optimizer with learning rate equal to `5e-5`, trained `25`, `25`, `10`, `10` epochs respectively.
+We performed experiments of `5-way-1-shot`, `5-way-5-shot`, `102-way-1-shot`, `102-way-5-shot` using `VGG-16`. 
+
+For each experiment, We used `cross entropy` as loss function with `label_smoothing` equal to `0.1` and `Adam` optimizer with learning rate equal to `5e-5`, trained `25`, `25`, `10`, `10` epochs respectively.
 
 ### Results and analyzation
 
-|       Metric\experiment        |             5-way-1-shot           |             5-way-5-shot           |            102-way-1-shot     | 102-way-5-shot        |
+|       metric\experiment        |             5-way-1-shot           |             5-way-5-shot           |            102-way-1-shot     | 102-way-5-shot        |
 :--------------------:|:----------------------------:|:--------------------------------:|:------------------------------------:|:---------------------:|
 | train set size    |   5/1020 | 25/1020 | 102/1020 | 510/1020
 | test set size | 161/6149 | 161/6149 | 6149/6149 | 6149/6149
@@ -138,6 +139,12 @@ We performed experiments of `5-way-1-shot`, `5-way-5-shot`, `102-way-1-shot`, `1
 - **Fine-tune** and **overfit**
 
   In our experiment, fine-tuning improve the accuracy from `2.7%` to `10.5%`. In some other cases, we also found fine-tuning might lead to a model downgrade and decrease the accuracy, especially when we train more epochs and the model gets overfitted.
+
+- **Possible improvement in future work**
+  
+  Notice that the experiment results are all single runs. To get more concrete results we might need to run multiple times and calculate the statistics (i.e. mean and std).
+
+  We only test [0, `k`) classes without using a random discrete sampling. We might consider relabeling the dataset and do multiple experiments.
 
 ## Task 3: Visual prompt tuning on a vision transformer
 
@@ -182,7 +189,7 @@ We use `sparse_categorical_crossentropy` as loss function and apply the `SGD` op
 
 ### Results and analyzation
 
-|       Metric\model        |             vit_b16-shallow           |             vit_b16-deep           |
+|       metric\model        |             vit_b16-shallow           |             vit_b16-deep           |
 :--------------------:|:----------------------------:|:--------------------------------:|
 | trainable/total params |  82,278/85,880,934   |  124,518/85,923,174   |
 |        loss          |![](./figures/vit_b16_shallow_loss.png) |  ![](./figures/vit_b16_deep_loss.png)|
@@ -281,7 +288,7 @@ def show_accuracy(loss_name):
 
 ### Results
 
-|       Metric\loss        |             TripletHardLoss           |             TripletSemiHardLoss           |   
+|       metric\loss        |             TripletHardLoss           |             TripletSemiHardLoss           |   
 :--------------------:|:----------------------------:|:--------------------------------:|
 |       train loss          |![](./figures/TripletHardLoss_loss.png) |  ![](./figures/TripletSemiHardLoss_loss.png)|
 |       test accuracy       | 83.7%  |  78.2% | 
